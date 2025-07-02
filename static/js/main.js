@@ -1,4 +1,3 @@
-// 题目生成器前端核心脚本
 class QuizGenerator {
     constructor() {
         this.currentStep = 1;
@@ -16,7 +15,6 @@ class QuizGenerator {
         this.initMathJax();
     }
 
-    // 初始化MathJax用于LaTeX公式渲染
     initMathJax() {
         if (window.MathJax) {
             window.MathJax = {
@@ -32,7 +30,6 @@ class QuizGenerator {
         }
     }
 
-    // 渲染LaTeX公式
     renderMath() {
         if (window.MathJax && window.MathJax.typesetPromise) {
             window.MathJax.typesetPromise().catch((err) => {
@@ -41,9 +38,7 @@ class QuizGenerator {
         }
     }
 
-    // 绑定事件
     bindEvents() {
-        // 文件上传区域
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('fileInput');
         
@@ -79,13 +74,11 @@ class QuizGenerator {
             });
         }
 
-        // 下一步按钮
         const nextBtn = document.getElementById('nextBtn');
         if (nextBtn) {
             nextBtn.addEventListener('click', () => this.nextStep());
         }
 
-        // 生成按钮
         const generateBtn = document.getElementById('generateBtn');
         if (generateBtn) {
             generateBtn.addEventListener('click', (e) => {
@@ -95,7 +88,6 @@ class QuizGenerator {
         }
     }
 
-    // 处理文件选择
     handleFileSelect(file) {
         const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'text/markdown'];
         
@@ -114,14 +106,12 @@ class QuizGenerator {
         document.getElementById('nextBtn').disabled = false;
     }
 
-    // 显示文件信息
     displayFileInfo(file) {
         document.getElementById('fileName').textContent = file.name;
         document.getElementById('fileSize').textContent = this.formatFileSize(file.size);
         document.getElementById('fileInfo').style.display = 'block';
     }
 
-    // 格式化文件大小
     formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -130,7 +120,6 @@ class QuizGenerator {
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
 
-    // 下一步
     nextStep() {
         if (!this.selectedFile) {
             alert('请先选择文件');
@@ -144,13 +133,11 @@ class QuizGenerator {
         document.getElementById('nextBtn').style.display = 'none';
         document.getElementById('generateBtn').style.display = 'inline-block';
         
-        // 更新步骤指示器
         document.getElementById('step1').classList.remove('active');
         document.getElementById('step1').classList.add('completed');
         document.getElementById('step2').classList.add('active');
     }
 
-    // 提交表单
     async submitForm() {
         const apiKey = document.getElementById('apiKey').value;
         if (!apiKey) {
@@ -185,7 +172,6 @@ class QuizGenerator {
         }
     }
 
-    // 处理文档
     async processDocument() {
         this.showLoading('正在处理文档...');
         
@@ -203,7 +189,6 @@ class QuizGenerator {
         }
     }
 
-    // 轮询处理状态
     async pollStatus() {
         try {
             const response = await fetch(`/status/${this.sessionId}`);
@@ -230,21 +215,18 @@ class QuizGenerator {
         }
     }
 
-    // 显示加载状态
     showLoading(message) {
         document.getElementById('progressContainer').style.display = 'block';
         document.getElementById('progressText').textContent = message;
         document.getElementById('generateBtn').disabled = true;
     }
 
-    // 隐藏加载状态
     hideLoading() {
         document.getElementById('progressContainer').style.display = 'none';
         document.getElementById('generateBtn').disabled = false;
     }
 }
 
-// 清除文件选择
 function clearFile() {
     document.getElementById('fileInput').value = '';
     document.getElementById('fileInfo').style.display = 'none';
@@ -254,15 +236,12 @@ function clearFile() {
     }
 }
 
-// 返回上一步
 function goBack() {
     document.getElementById('uploadSection').style.display = 'block';
     document.getElementById('configSection').style.display = 'none';
     document.getElementById('backBtn').style.display = 'none';
     document.getElementById('nextBtn').style.display = 'inline-block';
     document.getElementById('generateBtn').style.display = 'none';
-    
-    // 更新步骤指示器
     document.getElementById('step2').classList.remove('active');
     document.getElementById('step1').classList.remove('completed');
     document.getElementById('step1').classList.add('active');
