@@ -2,9 +2,6 @@
 This is a project that can generate questions from your notes
 # 智能题目生成器（AI-Question-Generator）使用指南
 
-## 在线访问地址
-访问：https://your-app-name.onrender.com 
-
 ## 使用步骤
 
 ### 1. 准备材料
@@ -33,6 +30,7 @@ This is a project that can generate questions from your notes
 - **较细致**：更多知识点和题型
 - **细致**：全面覆盖知识点
 - **精细**：最高质量输出
+随着质量档位提升，有融合多个知识点和题和难度较大的题出现，质量较高档位生成题目较多，适合想巩固基础的用户使用
 
 ## 常见问题
 
@@ -45,8 +43,6 @@ A: 检查文件格式和大小是否符合要求，确保网络连接稳定。
 ### Q: 生成的题目质量不满意？
 A: 尝试选择更高的质量档位，或启用知识点审核功能手动调整。
 
-### Q: 可以保存题目吗？
-A: 可以下载为JSON、HTML或Markdown格式永久保存。
 
 ## 注意事项
 - 请勿上传包含敏感信息的文件
