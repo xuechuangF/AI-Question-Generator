@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>知识点审核 - 题目生成器</title>
-    <!-- MathJax for LaTeX rendering -->
     <script>
         window.MathJax = {
             tex: {
@@ -361,7 +360,6 @@
 </head>
 <body>
     <div class="review-container">
-        <!-- 页面头部 -->
         <div class="header-section">
             <h1>📚 知识点审核</h1>
             <p>请仔细审核以下提取的知识点，您可以编辑、删除或添加新的知识点</p>
@@ -370,7 +368,6 @@
             </div>
         </div>
 
-        <!-- 统计信息 -->
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-number" id="totalPoints">{{ knowledge_points|length }}</div>
@@ -390,10 +387,8 @@
             </div>
         </div>
 
-        <!-- 提示信息 -->
         <div id="alertContainer"></div>
 
-        <!-- 知识点列表 -->
         <div id="knowledgePointsList">
             {% for point in knowledge_points %}
             <div class="knowledge-point" data-id="{{ point.id }}">
@@ -449,7 +444,6 @@
             {% endfor %}
         </div>
 
-        <!-- 添加新知识点区域 -->
         <div class="add-new-section">
             <button class="btn-add-new" onclick="showAddForm()">
                 ➕ 添加新知识点
@@ -480,7 +474,6 @@
         </div>
     </div>
 
-    <!-- 底部操作按钮 -->
     <div class="bottom-actions">
         <button class="btn-secondary" onclick="window.history.back()">
             ← 返回上传
@@ -490,7 +483,6 @@
         </button>
     </div>
 
-    <!-- 加载遮罩 -->
     <div class="loading-overlay" id="loadingOverlay">
         <div>
             <div class="loading-spinner"></div>
@@ -499,7 +491,6 @@
     </div>
 
     <script>
-        // LaTeX渲染函数
         function renderMathInElement(element) {
             if (window.MathJax && window.MathJax.typesetPromise) {
                 window.MathJax.typesetPromise([element]).then(() => {
@@ -508,7 +499,6 @@
             }
         }
 
-        // 渲染所有数学公式
         function renderAllMath() {
             if (window.MathJax && window.MathJax.typesetPromise) {
                 window.MathJax.typesetPromise().then(() => {
@@ -516,18 +506,15 @@
                 }).catch((err) => console.error('MathJax error:', err));
             }
         }
-        // 全局变量
         let knowledgePoints = {{ knowledge_points|tojson }};
         let editedCount = 0;
         let addedCount = 0;
         let deletedCount = 0;
         let currentEditingId = null;
 
-        // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', function() {
             updateProgress();
             updateStats();
-            // 等待MathJax加载完成后渲染
             if (window.MathJax) {
                 window.MathJax.startup.promise.then(() => {
                     renderAllMath();
@@ -535,7 +522,6 @@
             }
         });
 
-        // 编辑知识点
         function editPoint(id) {
             if (currentEditingId !== null && currentEditingId !== id) {
                 cancelEdit(currentEditingId);
@@ -552,7 +538,6 @@
             currentEditingId = id;
         }
 
-        // 取消编辑
         function cancelEdit(id) {
             const pointElement = document.querySelector(`[data-id="${id}"]`);
             const content = pointElement.querySelector('.point-content');
@@ -562,7 +547,6 @@
             content.style.display = 'block';
             editForm.classList.remove('active');
             
-            // 重置表单内容
             const textarea = editForm.querySelector('.edit-textarea');
             const originalText = knowledgePoints[id];
             textarea.value = originalText;
@@ -570,14 +554,12 @@
             currentEditingId = null;
         }
 
-        // 保存编辑
         function savePoint(event, id) {
             event.preventDefault();
             
             const pointElement = document.querySelector(`[data-id="${id}"]`);
             const editForm = pointElement.querySelector('.point-edit-form');
             
-            // 获取表单值
             const title = editForm.querySelector('[name="title"]').value.trim();
             const summary = editForm.querySelector('[name="summary"]').value.trim();
             const formulasInput = editForm.querySelector('[name="formulas"]').value.trim();
@@ -585,7 +567,6 @@
             const difficulty = editForm.querySelector('[name="difficulty"]').value;
             const type = editForm.querySelector('[name="type"]').value;
             
-            // 处理公式和术语（分割逗号，并去除空白）
             const formulas = formulasInput ? formulasInput.split(',').map(f => f.trim()).filter(f => f) : [];
             const terms = termsInput ? termsInput.split(',').map(t => t.trim()).filter(t => t) : [];
             
@@ -606,13 +587,11 @@
                 knowledge_type: type
             };
             }
-            // === 结束代码片段 ===
+
             
-            // 更新显示内容
             const content = pointElement.querySelector('.point-content');
             const titleElement = pointElement.querySelector('.point-title');
             
-            // 更新显示
             titleElement.textContent = title;
             content.innerHTML = `
             <div><strong>摘要:</strong> ${summary}</div>
@@ -622,11 +601,9 @@
             <div><strong>类型:</strong> ${type}</div>
             `;
             
-            // 退出编辑模式
             pointElement.classList.remove('editing');
             content.style.display = 'block';
             editForm.classList.remove('active');
-            // 渲染LaTeX公式
             if (window.MathJax) {
                 MathJax.typesetPromise([content]).catch((err) => console.log(err.message));
             }
@@ -640,19 +617,19 @@
             showAlert('知识点已保存！', 'success');
         }
 
-        // 删除知识点
+
         function deletePoint(id) {
             if (confirm('确定要删除这个知识点吗？')) {
                 const pointElement = document.querySelector(`[data-id="${id}"]`);
                 
-                // 添加删除动画
+
                 pointElement.style.transition = 'all 0.3s ease';
                 pointElement.style.opacity = '0';
                 pointElement.style.transform = 'translateX(-100%)';
                 
                 setTimeout(() => {
                     pointElement.remove();
-                    // 从数组中删除对应的知识点
+
                     const index = knowledgePoints.findIndex(kp => kp.id === id);
                     if (index !== -1) {
                         knowledgePoints.splice(index, 1);
@@ -665,19 +642,18 @@
             }
         }
 
-        // 显示添加表单
+
         function showAddForm() {
             document.getElementById('newPointForm').classList.add('active');
         }
 
-        // 隐藏添加表单
+
         function hideAddForm() {
             const form = document.getElementById('newPointForm');
             form.classList.remove('active');
             form.reset();
         }
 
-        // 添加新知识点
         function addNewPoint(event) {
             event.preventDefault();
             
@@ -694,7 +670,6 @@
                 return;
             }
             
-            // 获取新的ID
             const newId = Math.max(...knowledgePoints.map(kp => kp.id || 0), 0) + 1;
             
             const newPoint = {
@@ -710,7 +685,6 @@
             
             knowledgePoints.push(newPoint);
             
-            // 创建新的知识点元素HTML
             const newPointHTML = `
                 <div class="knowledge-point" data-id="${newId}" style="opacity: 0; transform: translateY(20px);">
                     <div class="point-header">
@@ -758,13 +732,12 @@
             
             document.getElementById('knowledgePointsList').insertAdjacentHTML('beforeend', newPointHTML);
             
-            // 添加进入动画
             setTimeout(() => {
                 const newElement = document.querySelector(`[data-id="${newId}"]`);
                 newElement.style.transition = 'all 0.3s ease';
                 newElement.style.opacity = '1';
                 newElement.style.transform = 'translateY(0)';
-                // 渲染新添加知识点的LaTeX公式
+
                 if (window.MathJax) {
                     MathJax.typesetPromise([newElement]).catch((err) => console.log(err.message));
                 }
@@ -777,7 +750,6 @@
             showAlert('新知识点已添加！', 'success');
         }
 
-        // 重新编号知识点
         function renumberPoints() {
             const points = document.querySelectorAll('.knowledge-point');
             points.forEach((point, index) => {
@@ -787,7 +759,6 @@
                     title.textContent = `知识点 ${index + 1}`;
                 }
                 
-                // 更新事件处理器
                 const editBtn = point.querySelector('.btn-edit');
                 const deleteBtn = point.querySelector('.btn-delete');
                 const form = point.querySelector('.point-edit-form');
@@ -800,7 +771,6 @@
             });
         }
 
-        // 更新统计信息
         function updateStats() {
             document.getElementById('totalPoints').textContent = knowledgePoints.length;
             document.getElementById('editedPoints').textContent = editedCount;
@@ -808,7 +778,6 @@
             document.getElementById('deletedPoints').textContent = deletedCount;
         }
 
-        // 更新进度条
         function updateProgress() {
             const total = Math.max(1, knowledgePoints.length);
             const processed = editedCount + addedCount;
@@ -816,7 +785,6 @@
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
-        // 显示提示信息
         function showAlert(message, type) {
             const alertContainer = document.getElementById('alertContainer');
             const alertDiv = document.createElement('div');
@@ -825,24 +793,20 @@
             
             alertContainer.appendChild(alertDiv);
             
-            // 3秒后自动移除
             setTimeout(() => {
                 alertDiv.remove();
             }, 3000);
         }
 
-        // 继续生成题目
         function proceedToGenerate() {
             if (knowledgePoints.length === 0) {
                 showAlert('至少需要一个知识点才能生成题目！', 'danger');
                 return;
             }
             
-            // 显示加载状态
             document.getElementById('loadingOverlay').style.display = 'flex';
             document.getElementById('generateBtn').disabled = true;
             
-            // 准备要发送的知识点数据，确保包含所有必要字段
             const knowledgePointsData = knowledgePoints.map((kp, index) => ({
                 id: index + 1,  // 重新编号
                 title: kp.title || '',
@@ -853,8 +817,7 @@
                 difficulty_level: kp.difficulty_level || '基础',
                 knowledge_type: kp.knowledge_type || '概念定义'
             }));
-            
-            // 发送数据到后端
+
             fetch('/generate_quiz', {
                 method: 'POST',
                 headers: {
@@ -873,7 +836,6 @@
             })
             .then(data => {
                 if (data.success) {
-                    // 成功后跳转到答题页面
                     window.location.href = `/quiz/${data.session_id}`;
                 } else {
                     throw new Error(data.error || '生成题目失败');
@@ -887,7 +849,6 @@
             });
         }
 
-        // 键盘快捷键
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey || e.metaKey) {
                 switch(e.key) {
@@ -907,7 +868,6 @@
             }
         });
 
-        // 页面离开前提醒
         window.addEventListener('beforeunload', function(e) {
             if (editedCount > 0 || addedCount > 0 || deletedCount > 0) {
                 e.preventDefault();
