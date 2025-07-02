@@ -1,5 +1,5 @@
 # AI-Question-Generator
-This is a project that can generate questions from your notes
+这是一个可以从你自己的笔记中个性化生成题目的智能题目生成器
 # 智能题目生成器（AI-Question-Generator）使用指南
 
 ## 使用步骤
