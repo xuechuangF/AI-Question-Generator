@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智能做题系统</title>
-    <!-- MathJax for LaTeX rendering -->
     <script>
         window.MathJax = {
             tex: {
@@ -332,20 +331,17 @@
         </div>
 
         <div class="quiz-container">
-            <!-- 加载状态 -->
             <div id="loading" class="loading">
                 <div class="spinner"></div>
                 <p>正在加载题目...</p>
             </div>
 
-            <!-- 题目区域 -->
             <div id="questionArea" style="display: none;">
                 <div class="question-card">
                     <div class="question-number" id="questionNumber">第 1 题</div>
                     <div class="question-text" id="questionText"></div>
                     
                     <div class="options-container" id="optionsContainer">
-                        <!-- 选项将动态生成 -->
                     </div>
 
                     <div class="explanation" id="explanation">
@@ -367,7 +363,6 @@
                 </div>
             </div>
 
-            <!-- 结果页面 -->
             <div id="resultArea" style="display: none;">
                 <div class="result-summary">
                     <h2>🎉 测试完成！</h2>
@@ -395,7 +390,6 @@
     </div>
 
     <script>
-        // LaTeX渲染函数
         function renderMathInElement(element) {
             if (window.MathJax && window.MathJax.typesetPromise) {
                 window.MathJax.typesetPromise([element]).then(() => {
@@ -410,15 +404,12 @@
         let isAnswered = false;
         let sessionId = window.location.pathname.split('/').pop(); // 获取session_id
 
-        // 页面加载时获取题目数据
         document.addEventListener('DOMContentLoaded', function() {
             loadQuestions();
         });
 
-        // 加载题目数据
         async function loadQuestions() {
             try {
-                // 修改API端点
                 const response = await fetch(`/api/questions/${sessionId}`);
                 if (!response.ok) {
                     throw new Error('获取题目失败');
@@ -447,7 +438,6 @@
             }
         }
 
-        // 提交答案
         async function submitAnswer() {
             if (selectedOption === null) {
                 alert('请先选择一个答案！');
@@ -458,7 +448,6 @@
             const question = questions[currentQuestionIndex];
             
             try {
-                // 发送答案到后端
                 const response = await fetch(`/submit_answer/${sessionId}`, {
                     method: 'POST',
                     headers: {
@@ -466,17 +455,16 @@
                     },
                     body: JSON.stringify({
                         question_id: currentQuestionIndex,
-                        answer: selectedOption  // 发送选项字母
+                        answer: selectedOption  
                     })
                 });
                 
                 const result = await response.json();
                 
-                // 显示答案结果
                 const options = document.querySelectorAll('.option');
                 options.forEach(option => {
                     const letter = option.querySelector('.option-letter').textContent;
-                    if (letter === result.correct_answer) {  // 使用服务器返回的正确答案
+                    if (letter === result.correct_answer) {  
                         option.classList.add('correct');
                     } else if (letter === selectedOption && !result.is_correct) {
                         option.classList.add('incorrect');
@@ -484,24 +472,20 @@
                     option.style.cursor = 'default';
                 });
 
-                // 显示解析
-                document.getElementById('explanationText').textContent = result.explanation;  // 使用服务器返回的解析
+                document.getElementById('explanationText').textContent = result.explanation; 
                 document.getElementById('explanation').classList.add('show');
                 
-                // 渲染解析中的LaTeX公式
                 if (window.MathJax) {
                     const explanationElement = document.getElementById('explanation');
                     MathJax.typesetPromise([explanationElement]).catch((err) => console.log(err.message));
                 }
 
-                // 记录答案
                 userAnswers.push({
                     questionIndex: currentQuestionIndex,
                     selectedAnswer: selectedOption,
                     isCorrect: result.is_correct
                 });
 
-                // 更新按钮
                 document.getElementById('submitBtn').style.display = 'none';
                 
                 if (result.is_last) {
@@ -515,7 +499,6 @@
             }
         }
 
-        // 显示当前题目
         function showQuestion() {
             if (currentQuestionIndex >= questions.length) {
                 showResults();
@@ -525,23 +508,18 @@
             const question = questions[currentQuestionIndex];
             selectedOption = null;
             isAnswered = false;
-            // 重新启用提交按钮
             document.getElementById('submitBtn').disabled = false;
 
-            // 更新进度
             const progress = ((currentQuestionIndex) / questions.length) * 100;
             document.getElementById('progressFill').style.width = `${progress}%`;
             document.getElementById('currentQuestion').textContent = `题目 ${currentQuestionIndex + 1}`;
             
-            // 显示题目
             document.getElementById('questionNumber').textContent = `第 ${currentQuestionIndex + 1} 题`;
             document.getElementById('questionText').textContent = question.question;
 
-            // 生成选项
             const optionsContainer = document.getElementById('optionsContainer');
             optionsContainer.innerHTML = '';
             
-            // 确保按照A、B、C、D的顺序显示选项
             const optionLetters = ['A', 'B', 'C', 'D'];
             optionLetters.forEach(letter => {
                 if (question.options[letter]) {
@@ -559,37 +537,31 @@
                 }
             });
 
-            // 重置按钮状态
             document.getElementById('submitBtn').style.display = 'block';
             document.getElementById('nextBtn').style.display = 'none';
             document.getElementById('finishBtn').style.display = 'none';
             document.getElementById('explanation').classList.remove('show');
 
-            // 延迟渲染LaTeX公式
             setTimeout(() => {
                 renderMathInElement(document.getElementById('questionArea'));
             }, 100);
         }
 
-        // 选择选项
         function selectOption(optionKey) {
             if (isAnswered) return;
 
-            // 清除之前的选择
             document.querySelectorAll('.option').forEach(opt => {
                 opt.classList.remove('selected');
             });
 
-            // 选中当前选项 - 使用data-letter属性
             const selectedOptionElement = document.querySelector(`[data-letter="${optionKey}"]`);
             if (selectedOptionElement) {
                 selectedOptionElement.classList.add('selected');
             }
             
-            selectedOption = optionKey;  // 修正：这里应该直接赋值给全局变量，而不是声明新的局部变量
+            selectedOption = optionKey;  
         }
 
-        // 提交答案
         async function submitAnswer() {
             if (selectedOption === null) {
                 alert('请先选择一个答案！');
@@ -599,11 +571,9 @@
             isAnswered = true;
             const question = questions[currentQuestionIndex];
             
-            // 禁用提交按钮防止重复提交
             document.getElementById('submitBtn').disabled = true;
             
             try {
-                // 发送答案到后端
                 const response = await fetch(`/submit_answer/${sessionId}`, {
                     method: 'POST',
                     headers: {
@@ -611,38 +581,31 @@
                     },
                     body: JSON.stringify({
                         question_id: currentQuestionIndex,
-                        answer: selectedOption  // 发送选项字母
+                        answer: selectedOption  
                     })
                 });
                 
                 const result = await response.json();
                 
-                // 显示答案结果
                 const options = document.querySelectorAll('.option');
                 options.forEach(option => {
                     const letter = option.getAttribute('data-letter');
-                    // 标记正确答案
                     if (letter === result.correct_answer) {
                         option.classList.add('correct');
                     }
-                    // 标记用户的错误答案
                     if (letter === selectedOption && !result.is_correct) {
                         option.classList.add('incorrect');
                     }
                     option.style.cursor = 'default';
-                    option.onclick = null;  // 禁用点击
+                    option.onclick = null;  
                 });
 
-                // 显示解析
                 document.getElementById('explanationText').textContent = result.explanation;
                 document.getElementById('explanation').classList.add('show');
                 
-                // 渲染解析中的LaTeX公式
                 setTimeout(() => {
                     renderMathInElement(document.getElementById('explanation'));
                 }, 100);
-
-                // 记录答案
                 userAnswers.push({
                     questionIndex: currentQuestionIndex,
                     selectedAnswer: selectedOption,
@@ -650,7 +613,6 @@
                     isCorrect: result.is_correct
                 });
 
-                // 更新按钮
                 document.getElementById('submitBtn').style.display = 'none';
                 
                 if (result.is_last) {
@@ -665,20 +627,15 @@
             }
         }
 
-        // 下一题
         function nextQuestion() {
             currentQuestionIndex++;
             showQuestion();
         }
 
-        // 完成测试
         function finishQuiz() {
-            // 更新最终进度
             document.getElementById('progressFill').style.width = '100%';
             showResults();
         }
-
-        // 显示结果
         function showResults() {
             const correctCount = userAnswers.filter(answer => answer.isCorrect).length;
             const totalCount = userAnswers.length;
@@ -692,7 +649,6 @@
             document.getElementById('wrongCount').textContent = totalCount - correctCount;
             document.getElementById('totalCount').textContent = totalCount;
 
-            // 根据分数显示不同的鼓励消息
             let message;
             if (score >= 90) {
                 message = '🏆 优秀！您的表现非常出色！';
@@ -710,7 +666,6 @@
 
         }
 
-        // 保存结果
         async function saveResults(results) {
             try {
                 await fetch('/api/save_results', {
@@ -725,7 +680,6 @@
             }
         }
 
-        // 重新开始
         function restartQuiz() {
             currentQuestionIndex = 0;
             userAnswers = [];
@@ -738,7 +692,6 @@
             showQuestion();
         }
 
-        // 返回首页
         function goHome() {
             window.location.href = '/';
         }
