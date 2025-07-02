@@ -5,7 +5,7 @@
 ## 使用步骤
 
 ### 1. 准备材料
-- 支持的文件格式：PDF、Word (.doc, .docx)、txt、markdown
+- 支持的文件格式：PDF、Word (.doc, .docx)、txt、md、markdown
 - 建议使用结构清晰的学习笔记或教材
 
 ### 2. 获取 API 密钥
