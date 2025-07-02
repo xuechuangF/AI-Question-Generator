@@ -1,4 +1,3 @@
-/* Reset and Base Styles */
 * {
     margin: 0;
     padding: 0;
@@ -18,7 +17,6 @@ body {
     padding: 20px;
 }
 
-/* Header and Progress */
 header {
     text-align: center;
     margin-bottom: 30px;
@@ -57,7 +55,6 @@ header {
     background-color: #28a745;
 }
 
-/* File Upload */
 .upload-area {
     border: 2px dashed #007bff;
     padding: 20px;
@@ -89,7 +86,6 @@ header {
     color: #666;
 }
 
-/* Form Styles */
 .form-group {
     margin-bottom: 15px;
 }
@@ -120,7 +116,6 @@ header {
     color: #dc3545;
 }
 
-/* Knowledge Points */
 .knowledge-point-item {
     background-color: #fff;
     border: 1px solid #ddd;
@@ -149,7 +144,6 @@ header {
     margin-right: 5px;
 }
 
-/* Questions */
 .question-card {
     background-color: #fff;
     border: 1px solid #ddd;
@@ -184,7 +178,6 @@ header {
     background-color: #dc3545;
 }
 
-/* Results */
 .results-summary {
     display: flex;
     align-items: center;
@@ -250,7 +243,6 @@ header {
     padding-left: 10px;
 }
 
-/* Modal */
 .modal {
     position: fixed;
     top: 0;
@@ -292,7 +284,6 @@ header {
     gap: 10px;
 }
 
-/* Loading */
 .loading-modal {
     position: fixed;
     top: 0;
@@ -315,7 +306,6 @@ header {
     gap: 10px;
 }
 
-/* 步骤指示器样式 */
 .step {
     display: inline-block;
     margin: 0 10px;
@@ -331,13 +321,11 @@ header {
     color: white;
 }
 
-/* 拖拽上传样式 */
 .upload-area.dragover {
     background-color: #e3f2fd;
     border-color: #2196f3;
 }
 
-/* 进度条样式 */
 #progressContainer {
     margin-top: 20px;
 }
@@ -346,12 +334,10 @@ header {
     transition: width 0.3s ease;
 }
 
-/* 按钮样式 */
 #backBtn, #nextBtn, #generateBtn {
     margin: 0 5px;
 }
 
-/* 文件信息样式 */
 .file-info {
     margin-top: 15px;
     padding: 10px;
@@ -359,7 +345,6 @@ header {
     border-radius: 5px;
 }
 
-/* 配置区域样式 */
 .config-section {
     animation: fadeIn 0.3s ease;
 }
@@ -375,7 +360,6 @@ header {
     }
 }
 
-/* 知识点审核页面样式补充 */
 .knowledge-point-item {
     transition: all 0.3s ease;
 }
@@ -385,7 +369,6 @@ header {
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-/* 做题页面样式补充 */
 .question-card {
     animation: slideIn 0.3s ease;
 }
@@ -401,7 +384,6 @@ header {
     }
 }
 
-/* 结果页面样式补充 */
 .results-summary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -420,7 +402,6 @@ header {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* 响应式设计 */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
