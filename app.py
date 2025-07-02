@@ -10,13 +10,12 @@ from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 import threading
 from datetime import datetime
-# 修改导入部分（第8-19行）
 from core.generator import (
     EnhancedNoteToQuizGenerator,
     KnowledgePoint,
     Question,
     QuizFormatter,
-    Config,  # 改为直接使用Config
+    Config,  
     DocumentParser,
     TextChunker,
     KnowledgeExtractor,
@@ -30,11 +29,9 @@ app.config['SECRET_KEY'] = 'your-secret-key-here'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# 确保上传目录存在
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('outputs', exist_ok=True)
 
-# 全局变量存储会话数据
 sessions = {}
 def allowed_file(filename):
     """检查文件类型是否允许"""
@@ -59,19 +56,14 @@ def upload_file():
             return jsonify({'error': 'No file selected'}), 400
         
         if file and allowed_file(file.filename):
-            # Generate unique session ID
             session_id = str(uuid.uuid4())
-            
-            # Save file with proper extension handling
             filename = secure_filename(file.filename)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             
-            # 确保保留文件扩展名
             if '.' in filename:
                 file_base, file_ext = os.path.splitext(filename)
                 unique_filename = f"{timestamp}_{file_base}{file_ext}"
             else:
-                # 如果文件名没有扩展名，尝试从MIME类型推断
                 mime_to_ext = {
                     'application/pdf': '.pdf',
                     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
@@ -85,18 +77,15 @@ def upload_file():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
             file.save(file_path)
             
-            # 调试输出
             print(f"✅ 保存文件: {unique_filename}")
             print(f"✅ 完整路径: {file_path}")
-            
-            # Create configuration from form data
+
             config = Config()
             config.API_KEY = request.form.get('apiKey', '')
             config.QUALITY_LEVEL = request.form.get('qualityLevel', '中等')
             config.OUTPUT_DIR = os.path.join('outputs', session_id)
             os.makedirs(config.OUTPUT_DIR, exist_ok=True)
             
-            # Store session information
             sessions[session_id] = {
                 'file_path': file_path,
                 'config': config,
@@ -132,15 +121,11 @@ def process_file(session_id):
     
     session_data = sessions[session_id]
     
-    # 检查是否已经在处理中或已完成
     if session_data['status'] in ['processing', 'completed']:
-        # 如果已经在处理或完成，直接返回处理页面
         return render_template('processing.html', session_id=session_id)
     
-    # 标记为处理中，防止重复处理
     session_data['status'] = 'processing'
     
-    # 启动后台处理任务
     thread = threading.Thread(target=process_document_async, args=(session_id,))
     thread.daemon = True
     thread.start()
@@ -153,28 +138,22 @@ def process_document_async(session_id):
         session_data = sessions[session_id]
         session_data['status'] = 'processing'
         
-        # 添加调试信息
         file_path = session_data['file_path']
         print(f"🔍 处理文件路径: {file_path}")
         print(f"🔍 文件是否存在: {os.path.exists(file_path)}")
         print(f"🔍 文件扩展名: {os.path.splitext(file_path)[1]}")
         
-        # 创建生成器
         generator = EnhancedNoteToQuizGenerator(session_data['config'])
         
-        # 处理文档
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         
-        # 不使用review参数，因为generator.process_document不接受这个参数
         knowledge_points, questions = loop.run_until_complete(
             generator.process_document(session_data['file_path'])
         )
         
-        # 保存结果
         generator.save_results(knowledge_points, questions, session_data['config'].OUTPUT_DIR)
         
-        # 将dataclass对象转换为字典以便存储
         session_data['knowledge_points'] = [asdict(kp) for kp in knowledge_points]
         session_data['questions'] = [asdict(q) for q in questions]
         session_data['status'] = 'completed'
@@ -238,7 +217,6 @@ def review_knowledge_points(session_id):
         session_data['knowledge_points'] = [asdict(kp) for kp in kp_list]
         return jsonify({'success': True, 'message': 'Knowledge points updated'})
     
-    # Convert to KnowledgePoint objects for rendering
     kp_list = [KnowledgePoint(**kp) for kp in session_data['knowledge_points']]
     return render_template('review.html', 
                          session_id=session_id,
@@ -257,7 +235,6 @@ def generate_quiz():
         session_data = sessions[session_id]
         updated_kps = data.get('knowledge_points', [])
         
-        # 转换为KnowledgePoint对象
         kp_objects = []
         for kp_data in updated_kps:
             kp = KnowledgePoint(
@@ -272,19 +249,15 @@ def generate_quiz():
             )
             kp_objects.append(kp)
         
-        # 创建生成器并生成题目
         generator = EnhancedNoteToQuizGenerator(session_data['config'])
         
-        # 使用异步方式生成题目
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         questions = loop.run_until_complete(generator.generator.generate_all(kp_objects))
         
-        # 保存结果
         session_data['knowledge_points'] = [asdict(kp) for kp in kp_objects]
         session_data['questions'] = [asdict(q) for q in questions]
         
-        # 保存到文件
         generator.save_results(kp_objects, questions, session_data['config'].OUTPUT_DIR)
         
         return jsonify({
@@ -306,7 +279,6 @@ def start_quiz(session_id):
         return redirect(url_for('index'))
     
     session_data = sessions[session_id]
-    # 确保处理已完成
     if session_data['status'] != 'completed':
         flash('文档处理未完成')
         return redirect(url_for('process_file', session_id=session_id))
@@ -315,8 +287,6 @@ def start_quiz(session_id):
     for q_data in session_data['questions']:
         q = Question(**q_data)
         questions.append(q)
-    
-    # 重置做题状态
     session_data['current_question'] = 0
     session_data['user_answers'] = {}
     session_data['quiz_start_time'] = time.time()
@@ -335,16 +305,13 @@ def submit_answer(session_id):
     session_data = sessions[session_id]
     data = request.get_json()
     question_id = int(data.get('question_id'))
-    answer = data.get('answer')  # 这是选项字母 A/B/C/D
+    answer = data.get('answer') 
     
-    # 获取题目
     question = session_data['questions'][question_id]
     is_correct = answer == question['correct_answer']
     
-    # 保存答案
     session_data['user_answers'][str(question_id)] = answer
     
-    # 更新当前题目索引
     if question_id < len(session_data['questions']) - 1:
         session_data['current_question'] = question_id + 1
         is_last = False
@@ -356,8 +323,8 @@ def submit_answer(session_id):
         'is_correct': is_correct,
         'is_last': is_last,
         'explanation': question['explanation'],
-        'correct_answer': question['correct_answer'],  # 返回正确答案字母
-        'correct_answer_text': question['options'][question['correct_answer']]  # 返回正确答案内容
+        'correct_answer': question['correct_answer'],  
+        'correct_answer_text': question['options'][question['correct_answer']] 
     })
 
 
@@ -372,12 +339,10 @@ def show_results(session_id):
     questions = session_data['questions']
     user_answers = session_data['user_answers']
     
-    #计算得分
     correct_count = 0
     results = []
     
     for i, question_dict in enumerate(questions):
-        # 重建Question对象
         question = Question(**question_dict)
         user_answer = user_answers.get(str(i), '')
         is_correct = user_answer == question.correct_answer
@@ -417,18 +382,15 @@ def download_results(session_id, format_type):
         return jsonify({'error': '处理未完成'}), 400
     
     try:
-        # 恢复对象（新增）
         kp_list = [KnowledgePoint(**kp) for kp in session_data['knowledge_points']]
         q_list = [Question(**q) for q in session_data['questions']]
         
-        # 创建生成器
         config = session_data['config']
         base_name = os.path.splitext(os.path.basename(session_data['file_path']))[0]
         output_dir = config.OUTPUT_DIR
         os.makedirs(output_dir, exist_ok=True)
         
         if format_type == 'json':
-            # 保存为JSON
             kp_data = [asdict(kp) for kp in kp_list]
             q_data = [asdict(q) for q in q_list]
             with open(f"{output_dir}/{base_name}_knowledge_points.json", 'w') as f:
@@ -436,7 +398,6 @@ def download_results(session_id, format_type):
             with open(f"{output_dir}/{base_name}_questions.json", 'w') as f:
                 json.dump(q_data, f, indent=2)
             
-            # 创建压缩包
             zip_path = f"{output_dir}/{base_name}.zip"
             with zipfile.ZipFile(zip_path, 'w') as zipf:
                 zipf.write(f"{output_dir}/{base_name}_knowledge_points.json", 
@@ -446,7 +407,6 @@ def download_results(session_id, format_type):
             return send_file(zip_path, as_attachment=True)
             
         elif format_type == 'html':
-            # 生成HTML
             html_content = QuizFormatter.to_html(q_list, kp_list)
             file_path = f"{output_dir}/{base_name}.html"
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -454,7 +414,6 @@ def download_results(session_id, format_type):
             return send_file(file_path, as_attachment=True)
             
         elif format_type == 'markdown':
-            # 生成Markdown
             md_content = QuizFormatter.to_markdown(q_list, kp_list)
             file_path = f"{output_dir}/{base_name}.md"
             with open(file_path, 'w', encoding='utf-8') as f:
@@ -469,7 +428,6 @@ def download_results(session_id, format_type):
 
 @app.route('/api/knowledge_points/<session_id>')
 def get_knowledge_points(session_id):
-    """获取知识点数据（用于AJAX）"""
     if session_id not in sessions:
         return jsonify({'error': '会话不存在'}), 404
     
@@ -481,7 +439,6 @@ def get_knowledge_points(session_id):
 
 @app.route('/api/questions/<session_id>')
 def get_questions(session_id):
-    """获取题目数据（用于AJAX）"""
     if session_id not in sessions:
         return jsonify({'error': '会话不存在'}), 404
     
