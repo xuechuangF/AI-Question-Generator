@@ -45,8 +45,8 @@ class Question:
     correct_answer: str
     explanation: str
     difficulty: str = "medium"
-    question_type: str = "基础理解"  # 新增：题目类型
-    related_knowledge_points: List[int] = None  # 新增：关联的知识点ID列表
+    question_type: str = "基础理解"  
+    related_knowledge_points: List[int] = None  
 
     def __post_init__(self):
         if self.related_knowledge_points is None:
@@ -91,7 +91,6 @@ class DocumentParser:
     @staticmethod
     def parse_document(file_path: str) -> str:
         """根据文件类型解析文档"""
-        # 转换为小写进行比较，支持更多格式
         file_path_lower = file_path.lower()
         
         if file_path_lower.endswith('.pdf'):
@@ -138,7 +137,7 @@ class TextChunker:
         if self.quality_level in ["简约", "中等"]:
             return self._chunk_by_paragraphs(text)
         else:
-            return self._chunk_by_sentences(text)  # 更细致的分块
+            return self._chunk_by_sentences(text)  
 
     def _chunk_by_paragraphs(self, text: str) -> List[Tuple[str, Dict[str, Any]]]:
         """按段落分块（适用于简约和中等档位）"""
@@ -333,7 +332,6 @@ class KnowledgeExtractor:
 
         self.strategy = self.extraction_strategies.get(quality_level, self.extraction_strategies["中等"])
 
-        # 更新的提取提示模板
         self.extraction_prompt_template = """你是一个高级学习辅助AI，任务是分析用户提供的学习资料，将其分解成核心知识点并结构化输出。
 
 **质量档位：** {quality_level}
@@ -848,14 +846,11 @@ class QuestionGenerator:
                 json_str = json_match.group(1)
             else:
                 json_str = response
-            # 清理控制字符 - 新增这部分代码
-            # 移除所有控制字符，但保留换行符、制表符和回车符
+
             json_str = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', json_str)
 
-            # 进一步清理可能的问题字符
             json_str = json_str.replace('\b', '').replace('\f', '').replace('\v', '')
 
-            # 修复可能的转义问题
             json_str = json_str.replace('\\', '\\\\').replace('\\"', '"')
 
             data = json.loads(json_str)
@@ -864,14 +859,10 @@ class QuestionGenerator:
             options = data['options']
             correct_answer = data['correct_answer']
 
-            # 获取正确答案的内容
             correct_content = options[correct_answer]
 
-            # 创建选项列表并随机打乱
             option_contents = list(options.values())
             random.shuffle(option_contents)
-
-            # 重新分配选项
             new_options = {}
             new_correct_answer = None
             option_keys = ['A', 'B', 'C', 'D']
@@ -891,7 +882,6 @@ class QuestionGenerator:
                 difficulty=data.get('difficulty', 'medium')
             )
 
-            # 添加新属性
             question.question_type = data.get('question_type', '基础理解')
             question.related_knowledge_points = data.get('related_knowledge_points', [kp_id])
 
@@ -1039,51 +1029,6 @@ class NoteToQuizGenerator:
 
         print(f"✅ 结果已保存到 {output_dir} 目录")
 
-# ========== 使用示例 ==========
-'''
-async def main():
-    """主函数"""
-    # 配置
-    API_KEY = "sk-273f86ed3ff34de18641e9e9e3fc29ec"  # 请替换为你的API密钥
-    FILE_PATH = ""    # 请替换为你的文档路径
-
-    # 创建生成器
-    generator = NoteToQuizGenerator(API_KEY)
-
-    try:
-        # 处理文档
-        start_time = time.time()
-        knowledge_points, questions = await generator.process_document(FILE_PATH)
-
-        # 保存结果
-        generator.save_results(knowledge_points, questions)
-
-        # 显示统计信息
-        elapsed_time = time.time() - start_time
-        print(f"\n⏱️ 总用时: {elapsed_time:.2f} 秒")
-        print(f"📊 平均每个知识点: {elapsed_time/len(knowledge_points):.2f} 秒")
-
-        # 显示示例题目
-        if questions:
-            print("\n📋 示例题目:")
-            q = questions[0]
-            print(f"题目: {q.question}")
-            for opt, content in q.options.items():
-                print(f"  {opt}. {content}")
-            print(f"正确答案: {q.correct_answer}")
-            print(f"解释: {q.explanation}")
-
-    except Exception as e:
-        print(f"❌ 处理过程中出错: {e}")
-
-# 在Colab中运行
-if __name__ == "__main__":
-
-    # 运行主程序
-    asyncio.run(main())
-'''
-
-# ========== 增强功能：用户界面 ==========
 
 class InteractiveReviewer:
     """交互式知识点审核器"""
@@ -1107,7 +1052,6 @@ class InteractiveReviewer:
             if action == 'K':
                 reviewed_kps.append(kp)
             elif action == 'E':
-                # 编辑知识点
                 new_title = input(f"新标题 (回车保持原标题): ").strip()
                 new_summary = input(f"新摘要 (回车保持原摘要): ").strip()
 
@@ -1119,7 +1063,6 @@ class InteractiveReviewer:
                 reviewed_kps.append(kp)
             # D - 删除，不添加到reviewed_kps
 
-        # 重新编号
         for i, kp in enumerate(reviewed_kps):
             kp.id = i + 1
 
@@ -1234,7 +1177,7 @@ class QuizFormatter:
     <div class="questions">
 """
 
-        # 添加题目
+        
         for q in questions:
             html += f"""
         <div class="question">
@@ -1249,7 +1192,7 @@ class QuizFormatter:
         </div>
 """
 
-        # 添加答案部分
+        
         html += """
     </div>
 
@@ -1277,7 +1220,6 @@ class QuizFormatter:
         """生成Markdown格式的测验"""
         md = "# 知识点测验\n\n"
 
-        # 知识点概览
         md += "## 知识点概览\n\n"
         for kp in knowledge_points:
             md += f"### {kp.id}. {kp.title}\n\n"
@@ -1285,7 +1227,6 @@ class QuizFormatter:
             if kp.key_formulas:
                 md += f"**关键公式：** {', '.join(kp.key_formulas)}\n\n"
 
-        # 题目部分
         md += "## 测验题目\n\n"
         for q in questions:
             md += f"### 题目 {q.id}\n\n"
@@ -1294,7 +1235,6 @@ class QuizFormatter:
                 md += f"- {opt}. {content}\n"
             md += "\n"
 
-        # 答案部分
         md += "## 答案与解析\n\n"
         for q in questions:
             md += f"**题目 {q.id}:** {q.correct_answer}\n\n"
@@ -1302,22 +1242,16 @@ class QuizFormatter:
 
         return md
 
-# ========== 配置管理 ==========
-
 class Config:
     """配置管理类"""
 
-    # API配置
     API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
     API_BASE_URL = "https://api.deepseek.com"
 
-    # 质量档位配置
     QUALITY_LEVEL = "中等"
 
-    # 并发配置
     MAX_CONCURRENT_REQUESTS = 5
 
-    # 输出配置
     OUTPUT_DIR = "output"
 
     @classmethod
@@ -1338,17 +1272,14 @@ class Config:
             "OUTPUT_DIR": cls.OUTPUT_DIR
         }
 
-
-# ========== 增强的主类 ==========
-
 class EnhancedNoteToQuizGenerator(NoteToQuizGenerator):
-    """增强版笔记生题器"""
+    """笔记生题器"""
 
     def __init__(self, config: Config = None):
         if config is None:
             config = Config()
 
-        super().__init__(config.API_KEY, config.QUALITY_LEVEL)  # 传递质量档位
+        super().__init__(config.API_KEY, config.QUALITY_LEVEL)  
         self.config = config
         self.chunker = TextChunker(quality_level=config.QUALITY_LEVEL)
         self.merger = KnowledgePointMerger(quality_level=config.QUALITY_LEVEL)
@@ -1357,17 +1288,14 @@ class EnhancedNoteToQuizGenerator(NoteToQuizGenerator):
 
     async def process_with_review(self, file_path: str, enable_review: bool = True) -> Tuple[List[KnowledgePoint], List[Question]]:
         """处理文档并可选地进行人工审核"""
-        # 解析和提取知识点
         text = DocumentParser.parse_document(file_path)
         chunks = self.chunker.chunk_text(text)
         raw_knowledge_points = await self.extractor.extract_all(chunks)
         merged_knowledge_points = self.merger.merge_knowledge_points(raw_knowledge_points)
 
-        # 可选的人工审核
         if enable_review:
             merged_knowledge_points = self.reviewer.review_knowledge_points(merged_knowledge_points)
 
-        # 生成题目
         questions = await self.generator.generate_all(merged_knowledge_points)
 
         return merged_knowledge_points, questions
@@ -1394,7 +1322,6 @@ class EnhancedNoteToQuizGenerator(NoteToQuizGenerator):
 
         print(f"✅ 已保存为多种格式到 {output_dir} 目录")
 
-# ========== Colab专用工具 ==========
 
 class ColabHelper:
     """Colab环境辅助工具"""
@@ -1404,7 +1331,6 @@ class ColabHelper:
         """设置Colab环境"""
         print("🔧 正在设置Colab环境...")
 
-        # 安装依赖
         import subprocess
         subprocess.run(["pip", "install", "-q", "PyPDF2", "python-docx",
                        "scikit-learn", "aiohttp", "nest_asyncio", "tqdm"])
@@ -1433,7 +1359,6 @@ class ColabHelper:
 
         print("📥 正在准备下载文件...")
 
-        # 创建压缩包
         import zipfile
         zip_name = "quiz_results.zip"
 
@@ -1443,7 +1368,6 @@ class ColabHelper:
                     file_path = os.path.join(root, file)
                     zipf.write(file_path)
 
-        # 下载压缩包
         files.download(zip_name)
         print("✅ 结果文件已下载")
 
@@ -1453,10 +1377,8 @@ class ColabHelper:
         print("🎯 笔记生题器 - 交互式设置")
         print("=" * 50)
 
-        # 获取API密钥
         api_key = input("请输入你的DeepSeek API密钥: ").strip()
 
-        # 质量档位选择
         print("\n📋 选择题目生成质量档位:")
         print("1. 简约 - 只抓重点知识，生成核心题目")
         print("2. 中等 - 平衡覆盖，适中的题目数量")
@@ -1477,14 +1399,11 @@ class ColabHelper:
         quality_level = quality_map.get(quality_choice, "中等")
         print(f"已选择质量档位: {quality_level}")
 
-        # 创建配置
         config = Config()
         config.API_KEY = api_key
         config.QUALITY_LEVEL = quality_level
 
         return config
-
-# ========== 完整的Colab使用流程 ==========
 
 async def colab_main():
     """Colab环境的主函数"""
@@ -1532,9 +1451,8 @@ async def colab_main():
         import traceback
         traceback.print_exc()
 
-# 在Colab中运行的入口
+
 if __name__ == "__main__":
-    # 如果在Colab环境
     try:
         import google.colab
         IN_COLAB = True
@@ -1542,8 +1460,6 @@ if __name__ == "__main__":
         IN_COLAB = False
 
     if IN_COLAB:
-        # 使用Colab专用流程
         asyncio.run(colab_main())
     else:
-        # 使用普通流程
         asyncio.run(main())
