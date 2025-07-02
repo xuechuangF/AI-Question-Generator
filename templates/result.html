@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试结果 - 智能题目生成器</title>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 渲染所有LaTeX公式
+        if (window.MathJax) {
+            MathJax.typesetPromise().catch((err) => console.log(err.message));
+        }
+    });
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="results-summary">
+            <h1>🎉 测试完成！</h1>
+            <div class="score-circle">
+                <div class="score-text">
+                    <div class="score-number">{{ "%.0f"|format(score) }}%</div>
+                    <div class="score-label">总分</div>
+                </div>
+            </div>
+            <div class="score-details">
+                <div class="score-item">
+                    <span class="label">正确题数:</span>
+                    <span class="value">{{ correct_count }} / {{ total_questions }}</span>
+                </div>
+                <div class="score-item">
+                    <span class="label">用时:</span>
+                    <span class="value">{{ "%.1f"|format(quiz_time/60) }} 分钟</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="detailed-analysis">
+            <h3>详细解析</h3>
+            {% for result in results %}
+            <div class="question-analysis {% if result.is_correct %}correct{% else %}incorrect{% endif %}">
+                <div class="analysis-header">
+                    <span>第 {{ loop.index }} 题</span>
+                    <span class="badge {% if result.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if result.is_correct %}正确{% else %}错误{% endif %}
+                    </span>
+                </div>
+                <div class="analysis-content">
+                    <p><strong>题目：</strong>{{ result.question }}</p>
+                    <p><strong>您的答案：</strong>{{ result.options.get(result.user_answer, '未作答') }}</p>
+                    <p><strong>正确答案：</strong>{{ result.options[result.correct_answer] }}</p>
+                    <p><strong>解析：</strong>{{ result.explanation }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="button-group text-center mt-4">
+            <a href="/download/{{ session_id }}/html" class="btn btn-primary">
+                <i class="fas fa-download"></i> 下载HTML报告
+            </a>
+            <a href="/download/{{ session_id }}/json" class="btn btn-secondary">
+                <i class="fas fa-file-code"></i> 下载JSON数据
+            </a>
+            <a href="/" class="btn btn-outline-primary">
+                <i class="fas fa-home"></i> 返回首页
+            </a>
+        </div>
+    </div>
+</body>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 等待MathJax加载完成后渲染
+    if (window.MathJax) {
+        window.MathJax.startup.promise.then(() => {
+            if (window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch((err) => console.log(err.message));
+            }
+        });
+    }
+});
+</script>
+</html>

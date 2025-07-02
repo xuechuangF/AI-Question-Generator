@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识点审核 - 题目生成器</title>
+    <!-- MathJax for LaTeX rendering -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        console.log('MathJax initial typesetting complete');
+                    });
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .review-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .knowledge-point {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .knowledge-point:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .knowledge-point.editing {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .point-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .point-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2c3e50;
+            flex: 1;
+            margin-right: 15px;
+        }
+
+        .point-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-save {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-save:hover {
+            background-color: #229954;
+        }
+
+        .btn-cancel {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #7f8c8d;
+        }
+
+        .point-content {
+            color: #34495e;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .point-edit-form {
+            display: none;
+        }
+
+        .point-edit-form.active {
+            display: block;
+        }
+
+        .edit-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+
+        .edit-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .add-new-section {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            margin: 30px 0;
+            transition: all 0.3s ease;
+        }
+
+        .add-new-section:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .btn-add-new {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-add-new:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .new-point-form {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .new-point-form.active {
+            display: block;
+        }
+
+        .bottom-actions {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            padding: 13px 28px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            margin: 20px 0;
+            border: 1px solid transparent;
+            border-radius: 8px;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .review-container {
+                padding: 10px;
+            }
+
+            .point-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .point-actions {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .bottom-actions {
+                position: static;
+                justify-content: center;
+                margin-top: 30px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="review-container">
+        <!-- 页面头部 -->
+        <div class="header-section">
+            <h1>📚 知识点审核</h1>
+            <p>请仔细审核以下提取的知识点，您可以编辑、删除或添加新的知识点</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- 统计信息 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalPoints">{{ knowledge_points|length }}</div>
+                <div>总知识点数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="editedPoints">0</div>
+                <div>已编辑</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="addedPoints">0</div>
+                <div>新增</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="deletedPoints">0</div>
+                <div>已删除</div>
+            </div>
+        </div>
+
+        <!-- 提示信息 -->
+        <div id="alertContainer"></div>
+
+        <!-- 知识点列表 -->
+        <div id="knowledgePointsList">
+            {% for point in knowledge_points %}
+            <div class="knowledge-point" data-id="{{ point.id }}">
+                <div class="point-header">
+                    <div class="point-title">{{ point.title }}</div>
+                    <div class="point-actions">
+                        <button class="btn-action btn-edit" onclick="editPoint({{ point.id }})">
+                        ✏️ 编辑
+                        </button>
+                        <button class="btn-action btn-delete" onclick="deletePoint({{ point.id }})">
+                        🗑️ 删除
+                        </button>
+                    </div>
+                </div>
+                <div class="point-content">
+                    <div><strong>摘要:</strong> {{ point.summary }}</div>
+                    {% if point.key_formulas %}
+                    <div><strong>公式:</strong> {{ point.key_formulas|join(', ') }}</div>
+                    {% endif %}
+                    {% if point.key_terms %}
+                    <div><strong>术语:</strong> {{ point.key_terms|join(', ') }}</div>
+                    {% endif %}
+                    <div><strong>难度:</strong> {{ point.difficulty_level }}</div>
+                    <div><strong>类型:</strong> {{ point.knowledge_type }}</div>
+                </div>
+                <form class="point-edit-form" onsubmit="savePoint(event, {{ point.id }})">
+                    <input type="text" class="edit-input" name="title" placeholder="标题" value="{{ point.title }}" required>
+                    <textarea class="edit-textarea" name="summary" placeholder="摘要" required>{{ point.summary }}</textarea>
+                    <input type="text" class="edit-input" name="formulas" placeholder="公式 (逗号分隔)" value="{{ point.key_formulas|join(', ') }}">
+                    <input type="text" class="edit-input" name="terms" placeholder="术语 (逗号分隔)" value="{{ point.key_terms|join(', ') }}">
+                    <select class="edit-input" name="difficulty" required>
+                        <option value="基础" {% if point.difficulty_level == "基础" %}selected{% endif %}>基础</option>
+                        <option value="进阶" {% if point.difficulty_level == "进阶" %}selected{% endif %}>进阶</option>
+                        <option value="高级" {% if point.difficulty_level == "高级" %}selected{% endif %}>高级</option>
+                    </select>
+                    <select class="edit-input" name="type" required>
+                        <option value="概念定义" {% if point.knowledge_type == "概念定义" %}selected{% endif %}>概念定义</option>
+                        <option value="原理方法" {% if point.knowledge_type == "原理方法" %}selected{% endif %}>原理方法</option>
+                        <option value="公式计算" {% if point.knowledge_type == "公式计算" %}selected{% endif %}>公式计算</option>
+                        <option value="实例应用" {% if point.knowledge_type == "实例应用" %}selected{% endif %}>实例应用</option>
+                        <option value="注意事项" {% if point.knowledge_type == "注意事项" %}selected{% endif %}>注意事项</option>
+                        <option value="条件限制" {% if point.knowledge_type == "条件限制" %}selected{% endif %}>条件限制</option>
+                        <option value="对比分析" {% if point.knowledge_type == "对比分析" %}selected{% endif %}>对比分析</option>
+                        <option value="背景信息" {% if point.knowledge_type == "背景信息" %}selected{% endif %}>背景信息</option>
+                        <option value="扩展知识" {% if point.knowledge_type == "扩展知识" %}selected{% endif %}>扩展知识</option>
+                    </select>
+                    <div class="point-actions">
+                        <button type="submit" class="btn-action btn-save">💾 保存</button>
+                        <button type="button" class="btn-action btn-cancel" onclick="cancelEdit({{ point.id }})">❌ 取消</button>
+                    </div>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- 添加新知识点区域 -->
+        <div class="add-new-section">
+            <button class="btn-add-new" onclick="showAddForm()">
+                ➕ 添加新知识点
+            </button>
+            <form class="new-point-form" id="newPointForm" onsubmit="addNewPoint(event)">
+                <h3>添加新知识点</h3>
+                <input type="text" class="edit-input" name="title" placeholder="知识点标题" required>
+                <textarea class="edit-textarea" name="summary" placeholder="请输入知识点摘要..." required></textarea>
+                <input type="text" class="edit-input" name="formulas" placeholder="公式 (逗号分隔，可选)">
+                <input type="text" class="edit-input" name="terms" placeholder="术语 (逗号分隔，可选)">
+                <select class="edit-input" name="difficulty" required>
+                    <option value="基础">基础</option>
+                    <option value="进阶">进阶</option>
+                    <option value="高级">高级</option>
+                </select>
+                <select class="edit-input" name="type" required>
+                    <option value="概念定义">概念定义</option>
+                    <option value="原理方法">原理方法</option>
+                    <option value="公式计算">公式计算</option>
+                    <option value="实例应用">实例应用</option>
+                    <option value="注意事项">注意事项</option>
+                </select>
+                <div class="point-actions">
+                    <button type="submit" class="btn-action btn-save">💾 添加</button>
+                    <button type="button" class="btn-action btn-cancel" onclick="hideAddForm()">❌ 取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 底部操作按钮 -->
+    <div class="bottom-actions">
+        <button class="btn-secondary" onclick="window.history.back()">
+            ← 返回上传
+        </button>
+        <button class="btn-primary" onclick="proceedToGenerate()" id="generateBtn">
+            继续生成题目 →
+        </button>
+    </div>
+
+    <!-- 加载遮罩 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div>
+            <div class="loading-spinner"></div>
+            <p style="margin-top: 20px; font-size: 1.2em; color: #667eea;">正在生成题目，请稍候...</p>
+        </div>
+    </div>
+
+    <script>
+        // LaTeX渲染函数
+        function renderMathInElement(element) {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise([element]).then(() => {
+                    console.log('MathJax rendering complete');
+                }).catch((err) => console.error('MathJax error:', err));
+            }
+        }
+
+        // 渲染所有数学公式
+        function renderAllMath() {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().then(() => {
+                    console.log('All MathJax rendering complete');
+                }).catch((err) => console.error('MathJax error:', err));
+            }
+        }
+        // 全局变量
+        let knowledgePoints = {{ knowledge_points|tojson }};
+        let editedCount = 0;
+        let addedCount = 0;
+        let deletedCount = 0;
+        let currentEditingId = null;
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            updateStats();
+            // 等待MathJax加载完成后渲染
+            if (window.MathJax) {
+                window.MathJax.startup.promise.then(() => {
+                    renderAllMath();
+                });
+            }
+        });
+
+        // 编辑知识点
+        function editPoint(id) {
+            if (currentEditingId !== null && currentEditingId !== id) {
+                cancelEdit(currentEditingId);
+            }
+
+            const pointElement = document.querySelector(`[data-id="${id}"]`);
+            const content = pointElement.querySelector('.point-content');
+            const editForm = pointElement.querySelector('.point-edit-form');
+            
+            pointElement.classList.add('editing');
+            content.style.display = 'none';
+            editForm.classList.add('active');
+            
+            currentEditingId = id;
+        }
+
+        // 取消编辑
+        function cancelEdit(id) {
+            const pointElement = document.querySelector(`[data-id="${id}"]`);
+            const content = pointElement.querySelector('.point-content');
+            const editForm = pointElement.querySelector('.point-edit-form');
+            
+            pointElement.classList.remove('editing');
+            content.style.display = 'block';
+            editForm.classList.remove('active');
+            
+            // 重置表单内容
+            const textarea = editForm.querySelector('.edit-textarea');
+            const originalText = knowledgePoints[id];
+            textarea.value = originalText;
+            
+            currentEditingId = null;
+        }
+
+        // 保存编辑
+        function savePoint(event, id) {
+            event.preventDefault();
+            
+            const pointElement = document.querySelector(`[data-id="${id}"]`);
+            const editForm = pointElement.querySelector('.point-edit-form');
+            
+            // 获取表单值
+            const title = editForm.querySelector('[name="title"]').value.trim();
+            const summary = editForm.querySelector('[name="summary"]').value.trim();
+            const formulasInput = editForm.querySelector('[name="formulas"]').value.trim();
+            const termsInput = editForm.querySelector('[name="terms"]').value.trim();
+            const difficulty = editForm.querySelector('[name="difficulty"]').value;
+            const type = editForm.querySelector('[name="type"]').value;
+            
+            // 处理公式和术语（分割逗号，并去除空白）
+            const formulas = formulasInput ? formulasInput.split(',').map(f => f.trim()).filter(f => f) : [];
+            const terms = termsInput ? termsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+            
+            if (!title || !summary) {
+            showAlert('标题和摘要不能为空！', 'danger');
+            return;
+            }
+            
+            const pointIndex = knowledgePoints.findIndex(p => p.id === id);
+            if (pointIndex !== -1) {
+            knowledgePoints[pointIndex] = {
+                ...knowledgePoints[pointIndex],
+                title: title,
+                summary: summary,
+                key_formulas: formulas,
+                key_terms: terms,
+                difficulty_level: difficulty,
+                knowledge_type: type
+            };
+            }
+            // === 结束代码片段 ===
+            
+            // 更新显示内容
+            const content = pointElement.querySelector('.point-content');
+            const titleElement = pointElement.querySelector('.point-title');
+            
+            // 更新显示
+            titleElement.textContent = title;
+            content.innerHTML = `
+            <div><strong>摘要:</strong> ${summary}</div>
+            ${formulas.length ? `<div><strong>公式:</strong> ${formulas.join(', ')}</div>` : ''}
+            ${terms.length ? `<div><strong>术语:</strong> ${terms.join(', ')}</div>` : ''}
+            <div><strong>难度:</strong> ${difficulty}</div>
+            <div><strong>类型:</strong> ${type}</div>
+            `;
+            
+            // 退出编辑模式
+            pointElement.classList.remove('editing');
+            content.style.display = 'block';
+            editForm.classList.remove('active');
+            // 渲染LaTeX公式
+            if (window.MathJax) {
+                MathJax.typesetPromise([content]).catch((err) => console.log(err.message));
+            }
+            
+            currentEditingId = null;
+            if (!pointElement.dataset.edited) {
+            editedCount++;
+            pointElement.dataset.edited = 'true';
+            }
+            updateStats();
+            showAlert('知识点已保存！', 'success');
+        }
+
+        // 删除知识点
+        function deletePoint(id) {
+            if (confirm('确定要删除这个知识点吗？')) {
+                const pointElement = document.querySelector(`[data-id="${id}"]`);
+                
+                // 添加删除动画
+                pointElement.style.transition = 'all 0.3s ease';
+                pointElement.style.opacity = '0';
+                pointElement.style.transform = 'translateX(-100%)';
+                
+                setTimeout(() => {
+                    pointElement.remove();
+                    // 从数组中删除对应的知识点
+                    const index = knowledgePoints.findIndex(kp => kp.id === id);
+                    if (index !== -1) {
+                        knowledgePoints.splice(index, 1);
+                    }
+                    deletedCount++;
+                    updateStats();
+                    updateProgress();
+                    showAlert('知识点已删除！', 'success');
+                }, 300);
+            }
+        }
+
+        // 显示添加表单
+        function showAddForm() {
+            document.getElementById('newPointForm').classList.add('active');
+        }
+
+        // 隐藏添加表单
+        function hideAddForm() {
+            const form = document.getElementById('newPointForm');
+            form.classList.remove('active');
+            form.reset();
+        }
+
+        // 添加新知识点
+        function addNewPoint(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const title = form.querySelector('[name="title"]').value.trim();
+            const summary = form.querySelector('[name="summary"]').value.trim();
+            const formulas = form.querySelector('[name="formulas"]').value.split(',').map(f => f.trim()).filter(f => f);
+            const terms = form.querySelector('[name="terms"]').value.split(',').map(t => t.trim()).filter(t => t);
+            const difficulty = form.querySelector('[name="difficulty"]').value;
+            const type = form.querySelector('[name="type"]').value;
+            
+            if (!title || !summary) {
+                showAlert('标题和摘要不能为空！', 'danger');
+                return;
+            }
+            
+            // 获取新的ID
+            const newId = Math.max(...knowledgePoints.map(kp => kp.id || 0), 0) + 1;
+            
+            const newPoint = {
+                id: newId,
+                title: title,
+                summary: summary,
+                key_formulas: formulas,
+                key_terms: terms,
+                difficulty_level: difficulty,
+                knowledge_type: type,
+                context_ref: ""
+            };
+            
+            knowledgePoints.push(newPoint);
+            
+            // 创建新的知识点元素HTML
+            const newPointHTML = `
+                <div class="knowledge-point" data-id="${newId}" style="opacity: 0; transform: translateY(20px);">
+                    <div class="point-header">
+                        <div class="point-title">${title}</div>
+                        <div class="point-actions">
+                            <button class="btn-action btn-edit" onclick="editPoint(${newId})">
+                                ✏️ 编辑
+                            </button>
+                            <button class="btn-action btn-delete" onclick="deletePoint(${newId})">
+                                🗑️ 删除
+                            </button>
+                        </div>
+                    </div>
+                    <div class="point-content">
+                        <div><strong>摘要:</strong> ${summary}</div>
+                        ${formulas.length ? `<div><strong>公式:</strong> ${formulas.join(', ')}</div>` : ''}
+                        ${terms.length ? `<div><strong>术语:</strong> ${terms.join(', ')}</div>` : ''}
+                        <div><strong>难度:</strong> ${difficulty}</div>
+                        <div><strong>类型:</strong> ${type}</div>
+                    </div>
+                    <form class="point-edit-form" onsubmit="savePoint(event, ${newId})">
+                        <input type="text" class="edit-input" name="title" placeholder="标题" value="${title}" required>
+                        <textarea class="edit-textarea" name="summary" placeholder="摘要" required>${summary}</textarea>
+                        <input type="text" class="edit-input" name="formulas" placeholder="公式 (逗号分隔)" value="${formulas.join(', ')}">
+                        <input type="text" class="edit-input" name="terms" placeholder="术语 (逗号分隔)" value="${terms.join(', ')}">
+                        <select class="edit-input" name="difficulty" required>
+                            <option value="基础" ${difficulty === "基础" ? "selected" : ""}>基础</option>
+                            <option value="进阶" ${difficulty === "进阶" ? "selected" : ""}>进阶</option>
+                            <option value="高级" ${difficulty === "高级" ? "selected" : ""}>高级</option>
+                        </select>
+                        <select class="edit-input" name="type" required>
+                            <option value="概念定义" ${type === "概念定义" ? "selected" : ""}>概念定义</option>
+                            <option value="原理方法" ${type === "原理方法" ? "selected" : ""}>原理方法</option>
+                            <option value="公式计算" ${type === "公式计算" ? "selected" : ""}>公式计算</option>
+                            <option value="实例应用" ${type === "实例应用" ? "selected" : ""}>实例应用</option>
+                            <option value="注意事项" ${type === "注意事项" ? "selected" : ""}>注意事项</option>
+                        </select>
+                        <div class="point-actions">
+                            <button type="submit" class="btn-action btn-save">💾 保存</button>
+                            <button type="button" class="btn-action btn-cancel" onclick="cancelEdit(${newId})">❌ 取消</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.getElementById('knowledgePointsList').insertAdjacentHTML('beforeend', newPointHTML);
+            
+            // 添加进入动画
+            setTimeout(() => {
+                const newElement = document.querySelector(`[data-id="${newId}"]`);
+                newElement.style.transition = 'all 0.3s ease';
+                newElement.style.opacity = '1';
+                newElement.style.transform = 'translateY(0)';
+                // 渲染新添加知识点的LaTeX公式
+                if (window.MathJax) {
+                    MathJax.typesetPromise([newElement]).catch((err) => console.log(err.message));
+                }
+            }, 10);
+            
+            addedCount++;
+            updateStats();
+            updateProgress();
+            hideAddForm();
+            showAlert('新知识点已添加！', 'success');
+        }
+
+        // 重新编号知识点
+        function renumberPoints() {
+            const points = document.querySelectorAll('.knowledge-point');
+            points.forEach((point, index) => {
+                point.dataset.id = index;
+                const title = point.querySelector('.point-title');
+                if (title.textContent.startsWith('知识点')) {
+                    title.textContent = `知识点 ${index + 1}`;
+                }
+                
+                // 更新事件处理器
+                const editBtn = point.querySelector('.btn-edit');
+                const deleteBtn = point.querySelector('.btn-delete');
+                const form = point.querySelector('.point-edit-form');
+                const cancelBtn = point.querySelector('.btn-cancel');
+                
+                editBtn.onclick = () => editPoint(index);
+                deleteBtn.onclick = () => deletePoint(index);
+                form.onsubmit = (e) => savePoint(e, index);
+                cancelBtn.onclick = () => cancelEdit(index);
+            });
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('totalPoints').textContent = knowledgePoints.length;
+            document.getElementById('editedPoints').textContent = editedCount;
+            document.getElementById('addedPoints').textContent = addedCount;
+            document.getElementById('deletedPoints').textContent = deletedCount;
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const total = Math.max(1, knowledgePoints.length);
+            const processed = editedCount + addedCount;
+            const progress = Math.min(100, (processed / total) * 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        // 显示提示信息
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.textContent = message;
+            
+            alertContainer.appendChild(alertDiv);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 3000);
+        }
+
+        // 继续生成题目
+        function proceedToGenerate() {
+            if (knowledgePoints.length === 0) {
+                showAlert('至少需要一个知识点才能生成题目！', 'danger');
+                return;
+            }
+            
+            // 显示加载状态
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('generateBtn').disabled = true;
+            
+            // 准备要发送的知识点数据，确保包含所有必要字段
+            const knowledgePointsData = knowledgePoints.map((kp, index) => ({
+                id: index + 1,  // 重新编号
+                title: kp.title || '',
+                summary: kp.summary || '',
+                context_ref: kp.context_ref || '',
+                key_formulas: kp.key_formulas || [],
+                key_terms: kp.key_terms || [],
+                difficulty_level: kp.difficulty_level || '基础',
+                knowledge_type: kp.knowledge_type || '概念定义'
+            }));
+            
+            // 发送数据到后端
+            fetch('/generate_quiz', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    knowledge_points: knowledgePointsData,
+                    session_id: '{{ session_id }}'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // 成功后跳转到答题页面
+                    window.location.href = `/quiz/${data.session_id}`;
+                } else {
+                    throw new Error(data.error || '生成题目失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('生成题目时出错：' + error.message, 'danger');
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('generateBtn').disabled = false;
+            });
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's':
+                        e.preventDefault();
+                        if (currentEditingId !== null) {
+                            const form = document.querySelector(`[data-id="${currentEditingId}"] .point-edit-form`);
+                            form.dispatchEvent(new Event('submit'));
+                        }
+                        break;
+                    case 'Escape':
+                        if (currentEditingId !== null) {
+                            cancelEdit(currentEditingId);
+                        }
+                        break;
+                }
+            }
+        });
+
+        // 页面离开前提醒
+        window.addEventListener('beforeunload', function(e) {
+            if (editedCount > 0 || addedCount > 0 || deletedCount > 0) {
+                e.preventDefault();
+                e.returnValue = '您有未保存的更改，确定要离开吗？';
+            }
+        });
+    </script>
+</body>
+</html>

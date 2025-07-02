@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智能题目生成器</title>
+    <!-- MathJax for LaTeX rendering -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        console.log('MathJax initial typesetting complete');
+                    });
+                }
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" id="MathJax-script" async></script>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- MathJax for LaTeX rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            }
+        };
+    </script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #16a34a;
+            --warning-color: #d97706;
+            --danger-color: #dc2626;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+                /* 新增样式 */
+        .quality-levels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .quality-level {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quality-level:hover {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .quality-level.selected {
+            border-color: #3b82f6;
+            background-color: rgba(59, 130, 246, 0.1);
+            font-weight: 600;
+        }
+        
+        .quality-level h5 {
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .quality-level p {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+            color: #64748b;
+        }
+        
+        .api-key-input {
+            position: relative;
+        }
+        
+        .api-key-input .toggle-visibility {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+        }
+
+        .header-section {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-section {
+            padding: 40px;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        .step.completed .step-number {
+            background: var(--success-color);
+        }
+
+        .step-line {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background: var(--secondary-color);
+            z-index: -1;
+        }
+
+        .step:last-child .step-line {
+            display: none;
+        }
+
+        .upload-area {
+            border: 3px dashed var(--primary-color);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            background: rgba(37, 99, 235, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: var(--success-color);
+            background: rgba(22, 163, 74, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: var(--success-color);
+            background: rgba(22, 163, 74, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area:hover .upload-icon {
+            color: var(--success-color);
+            transform: scale(1.1);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .config-section {
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .btn-custom {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 30px;
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            color: white;
+        }
+
+        .btn-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-custom:hover::before {
+            left: 100%;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+
+        .alert-custom {
+            border: none;
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .spinner-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-info {
+            background: rgba(22, 163, 74, 0.1);
+            border: 1px solid var(--success-color);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .tooltip-custom {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+
+        .tooltip-custom:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-size: 0.875rem;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .form-section {
+                padding: 20px;
+            }
+            
+            .header-section {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-xl-7">
+                    <div class="card">
+                        <!-- Header Section -->
+                        <div class="header-section">
+                            <div class="header-content">
+                                <h1 class="mb-3">
+                                    <i class="fas fa-brain me-3"></i>
+                                    智能题目生成器
+                                </h1>
+                                <p class="mb-0 fs-5">
+                                    基于AI技术，将您的笔记和文档智能转换为高质量的练习题目
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Form Section -->
+                        <div class="form-section">
+                            <!-- Step Indicator -->
+                            <div class="step-indicator">
+                                <div class="step active" id="step1">
+                                    <div class="step-number">1</div>
+                                    <div class="step-title">上传文件</div>
+                                    <div class="step-line"></div>
+                                </div>
+                                <div class="step" id="step2">
+                                    <div class="step-number">2</div>
+                                    <div class="step-title">配置参数</div>
+                                    <div class="step-line"></div>
+                                </div>
+                                <div class="step" id="step3">
+                                    <div class="step-number">3</div>
+                                    <div class="step-title">生成题目</div>
+                                </div>
+                            </div>
+
+                            <form id="generatorForm" enctype="multipart/form-data">
+                                <!-- File Upload Section -->
+                                <div class="upload-section" id="uploadSection">
+                                    <div class="upload-area" id="uploadArea">
+                                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                        <h4 class="mb-3">上传您的学习材料</h4>
+                                        <p class="text-muted mb-3">
+                                            支持 PDF、Word、TXT、Markdown 等格式<br>
+                                            拖拽文件到此处或点击选择文件
+                                        </p>
+                                        <input type="file" id="fileInput" class="file-input" 
+                                               accept=".pdf,.doc,.docx,.txt,.md,.rtf">
+                                        <button type="button" class="btn btn-custom" onclick="document.getElementById('fileInput').click()">
+                                            <i class="fas fa-folder-open me-2"></i>
+                                            选择文件
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="file-info" id="fileInfo">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-file-check text-success me-3 fs-4"></i>
+                                            <div>
+                                                <div class="fw-bold" id="fileName"></div>
+                                                <div class="text-muted small" id="fileSize"></div>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearFile()">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Configuration Section -->
+                                <div class="config-section" id="configSection">
+                                    <div class="alert alert-custom alert-info">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        请配置题目生成参数，这将影响生成题目的数量和质量
+                                    </div>
+
+                                    <div class="row">
+                                        <!-- API密钥输入 -->
+                                        <div class="mb-4 api-key-input">
+                                            <label for="apiKey" class="form-label">
+                                                DeepSeek API密钥
+                                                <span class="tooltip-custom" data-tooltip="请从DeepSeek平台获取API密钥">
+                                                    <i class="fas fa-question-circle text-muted"></i>
+                                                </span>
+                                            </label>
+                                            <input type="password" class="form-control" id="apiKey" 
+                                                placeholder="输入您的DeepSeek API密钥" required>
+                                            <span class="toggle-visibility" id="toggleVisibility">
+                                                <i class="fas fa-eye"></i>
+                                            </span>
+                                        </div>
+                                        
+                                    </div>
+
+                                    <div class="row">
+                                        <!-- 质量档位选择 -->
+                                        <div class="mb-4">
+                                            <label class="form-label">质量档位</label>
+                                            <div class="quality-levels">
+                                                <div class="quality-level" data-level="简约">
+                                                    <h5>简约</h5>
+                                                    <p>核心知识点+基础题目</p>
+                                                    <small>快速生成</small>
+                                                </div>
+                                                <div class="quality-level selected" data-level="中等">
+                                                    <h5>中等</h5>
+                                                    <p>平衡知识点+中等题目</p>
+                                                    <small>推荐选项</small>
+                                                </div>
+                                                <div class="quality-level" data-level="较细致">
+                                                    <h5>较细致</h5>
+                                                    <p>更多知识点+融合题</p>
+                                                    <small>深度覆盖</small>
+                                                </div>
+                                                <div class="quality-level" data-level="细致">
+                                                    <h5>细致</h5>
+                                                    <p>全面知识点+多种题型</p>
+                                                    <small>详细分析</small>
+                                                </div>
+                                                <div class="quality-level" data-level="精细">
+                                                    <h5>精细</h5>
+                                                    <p>完整知识点+丰富题型</p>
+                                                    <small>最高质量</small>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" id="qualityLevel" value="中等">
+                                        </div>
+                                        
+                                    </div>
+
+
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enableReview" checked>
+                                            <label class="form-check-label" for="enableReview">
+                                                启用知识点审核
+                                                <span class="tooltip-custom" data-tooltip="启用后可以在生成题目前审核提取的知识点">
+                                                    <i class="fas fa-question-circle text-muted"></i>
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-outline-secondary" id="backBtn" style="display: none;" onclick="goBack()">
+                                        <i class="fas fa-arrow-left me-2"></i>
+                                        返回
+                                    </button>
+                                    
+                                    <button type="button" class="btn btn-custom ms-auto" id="nextBtn" onclick="nextStep()" disabled>
+                                        继续
+                                        <i class="fas fa-arrow-right ms-2"></i>
+                                    </button>
+                                    
+                                    <button type="submit" class="btn btn-custom ms-auto" id="generateBtn" style="display: none;">
+                                        <i class="fas fa-magic me-2"></i>
+                                        开始生成
+                                    </button>
+                                </div>
+
+                                <!-- Progress Section -->
+                                <div class="progress-container" id="progressContainer">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span id="progressText">准备中...</span>
+                                        <span id="progressPercent">0%</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px; border-radius: 10px;">
+                                        <div class="progress-bar bg-gradient" id="progressBar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let currentStep = 1;
+        let selectedFile = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            setupFileUpload();
+            setupFormValidation();
+        });
+        // 质量档位选择
+        document.querySelectorAll('.quality-level').forEach(level => {
+            level.addEventListener('click', function() {
+                // 移除所有选中状态
+                document.querySelectorAll('.quality-level').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                // 添加当前选中状态
+                this.classList.add('selected');
+                
+                // 更新隐藏字段值
+                const selectedLevel = this.getAttribute('data-level');
+                document.getElementById('qualityLevel').value = selectedLevel;
+            });
+        });
+        
+        // API密钥可见性切换
+        document.getElementById('toggleVisibility').addEventListener('click', function() {
+            const apiKeyInput = document.getElementById('apiKey');
+            const icon = this.querySelector('i');
+            
+            if (apiKeyInput.type === 'password') {
+                apiKeyInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                apiKeyInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // File upload setup
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+
+            // Drag and drop functionality
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFileSelect(files[0]);
+                }
+            });
+
+            // File input change
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    handleFileSelect(e.target.files[0]);
+                }
+            });
+
+            // Click to upload
+            uploadArea.addEventListener('click', function() {
+                fileInput.click();
+            });
+        }
+
+        // Handle file selection
+        function handleFileSelect(file) {
+            const allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain',
+                'text/markdown'
+            ];
+
+            if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|doc|docx|txt|md|rtf)$/i)) {
+                alert('不支持的文件格式，请选择 PDF、Word、TXT 或 Markdown 文件。');
+                return;
+            }
+
+            if (file.size > 50 * 1024 * 1024) { // 50MB limit
+                alert('文件大小不能超过 50MB。');
+                return;
+            }
+
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileInfo').style.display = 'block';
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        // Clear selected file
+        function clearFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('nextBtn').disabled = true;
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Step navigation
+        function nextStep() {
+            if (currentStep === 1) {
+                if (!selectedFile) {
+                    alert('请先选择文件');
+                    return;
+                }
+                currentStep = 2;
+                updateStepUI();
+            }
+        }
+
+        function goBack() {
+            if (currentStep === 2) {
+                currentStep = 1;
+                updateStepUI();
+            }
+        }
+
+        // Update step UI
+        function updateStepUI() {
+            // Update step indicators
+            document.querySelectorAll('.step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Show/hide sections
+            if (currentStep === 1) {
+                document.getElementById('uploadSection').style.display = 'block';
+                document.getElementById('configSection').style.display = 'none';
+                document.getElementById('backBtn').style.display = 'none';
+                document.getElementById('nextBtn').style.display = 'inline-block';
+                document.getElementById('generateBtn').style.display = 'none';
+            } else if (currentStep === 2) {
+                document.getElementById('uploadSection').style.display = 'none';
+                document.getElementById('configSection').style.display = 'block';
+                document.getElementById('backBtn').style.display = 'inline-block';
+                document.getElementById('nextBtn').style.display = 'none';
+                document.getElementById('generateBtn').style.display = 'inline-block';
+            }
+        }
+
+        // Form submission
+        function setupFormValidation() {
+            document.getElementById('generatorForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                if (validateForm()) {
+                    submitForm();
+                }
+            });
+        }
+
+        function validateForm() {
+            if (!selectedFile) {
+                alert('请选择文件');
+                return false;
+            }
+            
+            const apiKey = document.getElementById('apiKey').value;
+            if (!apiKey) {
+                alert('请输入DeepSeek API密钥');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Submit form
+        function submitForm() {
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('apiKey', document.getElementById('apiKey').value);
+            formData.append('qualityLevel', document.getElementById('qualityLevel').value);
+            // 确保正确传递 enableReview 参数
+            formData.append('enableReview', document.getElementById('enableReview').checked ? 'true' : 'false');
+
+            // Show progress
+            showProgress();
+
+            // Submit to Flask backend
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // 存储session信息到localStorage（可选）
+                    localStorage.setItem('enableReview', document.getElementById('enableReview').checked);
+                    // 跳转到处理页面
+                    window.location.href = `/process/${data.session_id}`;
+                } else {
+                    throw new Error(data.error || '生成失败');
+                }
+            })
+            .catch(error => {
+                hideProgress();
+                console.error('Error:', error);
+                alert('生成过程中出错：' + (error.error || error.message || '未知错误'));
+            });
+        }
+
+        // Progress handling
+        function showProgress() {
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('generateBtn').disabled = true;
+            document.getElementById('generateBtn').innerHTML = '<div class="spinner-custom me-2"></div>生成中...';
+            
+            // Simulate progress
+            let progress = 0;
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            const stages = [
+                '上传文件中...',
+                '解析文档内容...',
+                '提取知识点...',
+                '生成题目...',
+                '处理公式...',
+                '完善解析...'
+            ];
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress >= 95) {
+                    progress = 95;
+                    clearInterval(interval);
+                }
+                
+                const stage = Math.floor((progress / 100) * stages.length);
+                progressText.textContent = stages[Math.min(stage, stages.length - 1)];
+                progressPercent.textContent = Math.round(progress) + '%';
+                progressBar.style.width = progress + '%';
+            }, 500);
+        }
+
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+            document.getElementById('generateBtn').disabled = false;
+            document.getElementById('generateBtn').innerHTML = '<i class="fas fa-magic me-2"></i>开始生成';
+        }
+
+        // Initialize MathJax
+        function renderMath() {
+            if (window.MathJax) {
+                MathJax.typesetPromise().catch((err) => console.log(err.message));
+            }
+        }
+    </script>
+    
+</body>
+</html>
