@@ -14,7 +14,6 @@ from tqdm import tqdm
 import nest_asyncio
 import time
 
-# 在Colab中启用嵌套的事件循环
 nest_asyncio.apply()
 
 @dataclass
@@ -26,8 +25,8 @@ class KnowledgePoint:
     context_ref: str = ""
     key_formulas: List[str] = None
     key_terms: List[str] = None
-    difficulty_level: str = "基础"  # 新增：基础/进阶/高级
-    knowledge_type: str = "概念定义"  # 新增：知识点类型
+    difficulty_level: str = "基础"  
+    knowledge_type: str = "概念定义" 
 
     def __post_init__(self):
         if self.key_formulas is None:
@@ -98,7 +97,6 @@ class DocumentParser:
         elif file_path_lower.endswith(('.docx', '.doc')):
             return DocumentParser.extract_text_from_docx(file_path)
         elif file_path_lower.endswith(('.txt', '.md', '.markdown')):
-            # 添加对txt和markdown文件的支持
             try:
                 with open(file_path, 'r', encoding='utf-8') as file:
                     return file.read()
@@ -113,7 +111,6 @@ class TextChunker:
     """文本分块器"""
 
     def __init__(self, quality_level: str = "中等"):
-        # 根据质量档位设置参数 - 更加精细的区分
         quality_configs = {
             "简约": {"max_chunk_size": 8000, "overlap_size": 200, "min_chunk_size": 3000},
             "中等": {"max_chunk_size": 4000, "overlap_size": 500, "min_chunk_size": 1500},
@@ -133,7 +130,6 @@ class TextChunker:
         将文本分块，保持语义完整性
         返回: [(chunk_text, metadata), ...]
         """
-        # 根据质量档位选择不同的分块策略
         if self.quality_level in ["简约", "中等"]:
             return self._chunk_by_paragraphs(text)
         else:
