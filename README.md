@@ -33,6 +33,13 @@
 - 随着质量档位提升，有融合多个知识点和题和难度较大的题出现，质量较高档位生成题目较多，适合想巩固基础的用户使用
 
 ## 效果展示
+<img src="image/1.png" width="300" alt="传文件界面">
+<img src="image/2.png" width="300" alt="配参数界面">
+<img src="image/3.png" width="300" alt="知识点审核界面">
+<img src="image/4.png" width="300" alt="做题界面">
+<img src="image/5.png" width="300" alt="做题解析界面">
+<img src="image/6.png" width="300" alt="做题界面">
+<img src="image/7.png" width="300" alt="完成界面">
 
 ## 常见问题
 
