@@ -1,63 +1,65 @@
-# AI-Question-Generator
-这是一个可以从你自己的笔记中个性化生成题目的智能题目生成器
-# 智能题目生成器（AI-Question-Generator）使用指南
+Here is the precise, word-for-word English translation of your entire guide:
 
-## 使用步骤
+# AI-Question-Generator  
+This is an intelligent question generator that can personalize questions from your own notes.  
 
-### 1. 准备材料
-- 支持的文件格式：PDF、Word (.doc, .docx)、txt、md、markdown
-- 建议使用结构清晰的学习笔记或教材
+# AI-Question-Generator User Guide  
 
-### 2. 获取 API 密钥
-- 访问 [DeepSeek官网](https://platform.deepseek.com/)
-- 注册账号并获取API密钥
-- 保存好您的密钥，每次使用都需要输入
+## Usage Steps  
 
-### 3. 使用流程
-1. **上传文件**：拖拽或点击选择您的学习材料
-2. **配置参数**：
-   - 输入DeepSeek API密钥
-   - 选择质量档位（推荐"中等"）
-   - 决定是否启用知识点审核
-3. **生成题目**：点击"开始生成"，等待处理完成
-4. **答题测试**：在线完成生成的题目
-5. **查看结果**：查看得分和详细解析
-6. **重复作答**：可多次重复作答题目
+### 1. Prepare Materials  
+- Supported file formats: PDF, Word (.doc, .docx), txt, md, markdown  
+- Recommended to use well-structured study notes or textbooks  
 
-## 质量档位说明
-- **简约**：快速生成核心题目
-- **中等**：平衡质量和速度
-- **较细致**：更多知识点和题型
-- **细致**：全面覆盖知识点
-- **精细**：最高质量输出
-- 随着质量档位提升，有融合多个知识点和题和难度较大的题出现，质量较高档位生成题目较多，适合想巩固基础的用户使用
+### 2. Obtain API Key  
+- Visit [DeepSeek Official Website](https://platform.deepseek.com/)  
+- Register an account and obtain an API key  
+- Securely save your key; it is required for every use  
 
-## 效果展示
-<img src="image/1.png" width="300" alt="传文件界面">
-<img src="image/2.png" width="300" alt="配参数界面">
-<img src="image/3.png" width="300" alt="知识点审核界面">
-<img src="image/4.png" width="300" alt="做题界面">
-<img src="image/5.png" width="300" alt="做题解析界面">
-<img src="image/6.png" width="300" alt="做题界面">
-<img src="image/7.png" width="300" alt="完成界面">
+### 3. Usage Process  
+1. **Upload File**: Drag and drop or click to select your learning material  
+2. **Configure Parameters**:  
+   - Enter DeepSeek API key  
+   - Select quality level (recommended "Medium")  
+   - Decide whether to enable knowledge point review  
+3. **Generate Questions**: Click "Start Generation" and wait for processing to complete  
+4. **Test Answers**: Complete generated questions online  
+5. **View Results**: Check scores and detailed explanations  
+6. **Repeat Testing**: Questions can be retaken multiple times  
 
-## 常见问题
+## Quality Level Description  
+- **Basic**: Quickly generates core questions  
+- **Medium**: Balances quality and speed  
+- **Detailed**: More knowledge points and question types  
+- **Comprehensive**: Fully covers knowledge points  
+- **Precise**: Highest quality output  
+- As quality levels increase, questions integrate multiple knowledge points and feature greater difficulty. Higher levels generate more questions, suitable for users wanting to consolidate foundations.  
 
-### Q: 为什么需要API密钥？
-A: 题目生成使用了DeepSeek的AI模型，需要您自己的密钥来调用服务。
+## Effect Demonstration  
+<img src="image/1.png" width="300" alt="File upload interface">  
+<img src="image/2.png" width="300" alt="Parameter configuration interface">  
+<img src="image/3.png" width="300" alt="Knowledge point review interface">  
+<img src="image/4.png" width="300" alt="Question answering interface">  
+<img src="image/5.png" width="300" alt="Answer explanation interface">  
+<img src="image/6.png" width="300" alt="Question answering interface">  
+<img src="image/7.png" width="300" alt="Completion interface">  
 
-### Q: 文件上传失败怎么办？
-A: 检查文件格式和大小是否符合要求，确保网络连接稳定。
+## Frequently Asked Questions  
 
-### Q: 生成的题目质量不满意？
-A: 尝试选择更高的质量档位，或启用知识点审核功能手动调整。
+### Q: Why is an API key required?  
+A: Question generation uses DeepSeek's AI model, requiring your own key to call the service.  
 
+### Q: What to do if file upload fails?  
+A: Check if file format and size meet requirements, and ensure stable network connection.  
 
-## 注意事项
-- 请勿上传包含敏感信息的文件
-- API密钥仅在本次会话使用，不会被保存
-- 建议定期清理浏览器缓存
-- 高峰期可能需要排队等待
+### Q: Unsatisfied with generated question quality?  
+A: Try selecting a higher quality level, or enable knowledge point review to manually adjust.  
 
-## 技术支持
-如遇到问题，请联系：1808605037@qq.com
+## Precautions  
+- Do not upload files containing sensitive information  
+- API keys are used only for the current session and will not be saved  
+- Regularly clear browser cache is recommended  
+- Queuing may be required during peak hours  
+
+## Technical Support  
+Contact if issues arise: 1808605037@qq.com
