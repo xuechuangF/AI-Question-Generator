@@ -1,5 +1,3 @@
-Here is the precise, word-for-word English translation of your entire guide:
-
 # AI-Question-Generator  
 This is an intelligent question generator that can personalize questions from your own notes.  
 
